@@ -1,13 +1,14 @@
 interface CoordinateDisplayProps {
   coordinates: { x: number; y: number };
   previewUrl: string;
+  pdfHeight: number;
 }
 
 export default function CoordinateDisplay({
   coordinates,
   previewUrl,
+  pdfHeight,
 }: CoordinateDisplayProps) {
-
   const containerWidth = 600;
   const containerHeight = 800;
   const magnifierSize = 150;
@@ -45,7 +46,7 @@ export default function CoordinateDisplay({
       <div style={magnifiedInnerStyle}></div>{" "}
       <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1">
         X: {Math.round(coordinates.x)}, Y:
-        {Math.round(coordinates.y)}
+        {Math.round(pdfHeight - coordinates.y)}
       </div>
     </div>
     // <div

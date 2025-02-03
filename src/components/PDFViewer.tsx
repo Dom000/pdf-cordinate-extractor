@@ -5,6 +5,18 @@ import { useState, useEffect, type MouseEvent, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import CoordinateDisplay from "./CoordinateDisplay";
 import domtoimage from "dom-to-image-more";
+import { DocumentCallback } from "react-pdf/src/shared/types.js";
+import { getPdfDimentions } from "@/lib/utils";
+import { Separator } from "./ui/separator";
+import DimensionSeperator from "./dimension-seperator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { DTData } from "../../types";
 
 interface PDFViewerProps {
   file: File;
@@ -14,6 +26,10 @@ export default function PDFViewer({ file }: PDFViewerProps) {
   const [numPages, setNumPages] = useState<number | null>(null);
   const pdfRef = useRef(null);
   const [pageNumber, setPageNumber] = useState(1);
+  const [pdfdata, setPdfData] = useState<DTData>();
+  const [pdfYinfo, setPdfYinfo] = useState("");
+  const [pdfXinfo, setPdfXinfo] = useState("");
+  const [pdfHeight, setpdfHeight] = useState(0);
   const scaleY = -4;
 
   const [previewUrl, setpreviewUrl] = useState("");
@@ -38,9 +54,15 @@ export default function PDFViewer({ file }: PDFViewerProps) {
     return () => document.removeEventListener("mousemove", moveCursor);
   }, []);
 
-  const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+  const onDocumentLoadSuccess = async (document: DocumentCallback) => {
+    const { numPages, getPage } = document;
     setNumPages(numPages);
     convertPdfToImage();
+    const { data, height } = await getPdfDimentions(file);
+    setPdfData(data);
+    setPdfXinfo(`${data.centimeters.x} cm`);
+    setPdfYinfo(`${data.centimeters.y} cm`);
+    setpdfHeight(Math.round(height));
   };
 
   const handleMouseMove = (event: MouseEvent<HTMLDivElement>) => {
@@ -62,9 +84,9 @@ export default function PDFViewer({ file }: PDFViewerProps) {
     const y = yAxis - rect.top;
 
     // Optionally update state so that CoordinateDisplay shows the clicked coordinates
-    setCoordinates({ x, y });
+    setCoordinates({ x, y: y });
 
-    const coordsText = `X: ${Math.round(x)}, Y: ${Math.round(y)}`;
+    const coordsText = `X: ${Math.round(x)}, Y: ${Math.round(pdfHeight - y)}`;
 
     navigator.clipboard
       .writeText(coordsText)
@@ -91,59 +113,113 @@ export default function PDFViewer({ file }: PDFViewerProps) {
     }, 3000);
   };
 
+  const handleChangeUnit = (e: string) => {
+    if (e === "centimeters") {
+      setPdfXinfo(`${pdfdata?.centimeters.x} cm`);
+      setPdfYinfo(`${pdfdata?.centimeters.y} cm`);
+    }
+    if (e === "inches") {
+      setPdfXinfo(`${pdfdata?.inches.x} in`);
+      setPdfYinfo(`${pdfdata?.inches.y} in`);
+    }
+    if (e === "points") {
+      setPdfXinfo(`${pdfdata?.points.x} pt`);
+      setPdfYinfo(`${pdfdata?.points.y} pt`);
+    }
+    if (e === "millimeters") {
+      setPdfXinfo(`${pdfdata?.millimeters.x} mm`);
+      setPdfYinfo(`${pdfdata?.millimeters.y} mm`);
+    }
+  };
+
   return (
-    <div className="w-full cursor-none flex flex-col justify-center items-center mt-40">
-      <div
-        className="custom-cursor"
-        style={{
-          left: `${position.x}px`,
-          top: `${position.y}px`,
-        }}
-      ></div>
-      <div id="pdf-container-node" className="w-fit">
-        <Document
-          ref={pdfRef}
-          className="border  border-black w-fit "
-          file={file}
-          onLoadSuccess={onDocumentLoadSuccess}
-        >
-          <div
-            onClick={handleClick}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={() => setCoordinates(null)}
-            className="relative caret-transparent  inline-block"
-          >
-            <Page pageNumber={pageNumber} />
-            {coordinates && (
-              <CoordinateDisplay
-                previewUrl={previewUrl}
-                coordinates={coordinates}
-              />
-            )}
+    <>
+      <Select onValueChange={handleChangeUnit}>
+        <SelectTrigger className="w-[180px]">
+          <SelectValue
+            placeholder="Centimeter (cm)"
+            defaultValue={"centimeters"}
+          />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="centimeters">Centimeter (cm)</SelectItem>
+          <SelectItem value="inches">Inch (in)</SelectItem>
+          <SelectItem value="millimeters">Millimeter (mm)</SelectItem>
+          <SelectItem value="points">Point (pt)</SelectItem>
+        </SelectContent>
+      </Select>
+      <div className="w-full cursor-none flex flex-col justify-center items-center mt-40">
+        <div
+          className="custom-cursor"
+          style={{
+            left: `${position.x}px`,
+            top: `${position.y}px`,
+          }}
+        ></div>
+        <div className="flex  relative w-fit h-fit  ">
+          {/* Y axis */}
+          <DimensionSeperator
+            orientation="vertical"
+            seperatorClassName="w-[850px]"
+            topText={pdfdata?.documentType}
+            bottomText={pdfYinfo}
+            className="   -left-20 -top-8 absolute h-full  w-20"
+          />
+          <div>
+            {/* X axise */}
+            <DimensionSeperator
+              topText={pdfdata?.documentType}
+              bottomText={pdfXinfo}
+              className="absolute h-10 -mt-16 w-full"
+            />
+            <div id="pdf-container-node" className="w-fit">
+              <Document
+                ref={pdfRef}
+                className="border  border-black w-fit "
+                file={file}
+                onLoadSuccess={onDocumentLoadSuccess}
+              >
+                <div
+                  onClick={handleClick}
+                  onMouseMove={handleMouseMove}
+                  onMouseLeave={() => setCoordinates(null)}
+                  className="relative caret-transparent  inline-block"
+                >
+                  <Page pageNumber={pageNumber} />
+                  {coordinates && (
+                    <CoordinateDisplay
+                      pdfHeight={pdfHeight}
+                      previewUrl={previewUrl}
+                      coordinates={coordinates}
+                    />
+                  )}
+                </div>
+              </Document>
+            </div>
           </div>
-        </Document>
+        </div>
+        <p className="mt-4">
+          Page {pageNumber} of {numPages}
+        </p>
+        <div className="mt-4 space-x-4">
+          <button
+            onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))}
+            disabled={pageNumber <= 1}
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() =>
+              setPageNumber((prev) => Math.min(prev + 1, numPages || 1))
+            }
+            disabled={pageNumber >= (numPages || 1)}
+            className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+          >
+            Next
+          </button>
+        </div>
       </div>
-      <p className="mt-4">
-        Page {pageNumber} of {numPages}
-      </p>
-      <div className="mt-4 space-x-4">
-        <button
-          onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))}
-          disabled={pageNumber <= 1}
-          className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
-        >
-          Previous
-        </button>
-        <button
-          onClick={() =>
-            setPageNumber((prev) => Math.min(prev + 1, numPages || 1))
-          }
-          disabled={pageNumber >= (numPages || 1)}
-          className="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
-        >
-          Next
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
