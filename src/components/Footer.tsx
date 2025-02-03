@@ -3,7 +3,7 @@ import { Github, Twitter, Heart } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="w-full py-4 mt-8 bg-gray-100">
+    <footer className="w-full py-4  bg-gray-100">
       <div className="container mx-auto px-4 flex justify-center items-center space-x-4">
         <Link
           href="https://github.com/dom000"
