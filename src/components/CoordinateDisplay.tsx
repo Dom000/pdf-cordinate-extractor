@@ -7,9 +7,6 @@ export default function CoordinateDisplay({
   coordinates,
   previewUrl,
 }: CoordinateDisplayProps) {
-  const size = 100;
-  const scale = 2;
-  // Style for the magnifier lens
 
   const containerWidth = 600;
   const containerHeight = 800;
