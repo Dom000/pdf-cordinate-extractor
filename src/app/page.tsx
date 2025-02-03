@@ -14,7 +14,12 @@ export default function Home() {
 
   return (
     <main className="min-h-screen  p-8">
-      <h1 className="text-3xl font-bold mb-8">PDF Coordinate Viewer</h1>
+      <h1 className="text-xl md:text-3xl font-bold mb-8">
+        PDF Coordinate Viewer <br />
+        <small className="text-red-700 md:hidden font-bold">
+          Note** : Use your Laptop for better performance
+        </small>
+      </h1>
       {!file ? (
         <FileUpload onFileSelect={handleFileSelect} />
       ) : (
