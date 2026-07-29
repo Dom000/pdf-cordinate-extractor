@@ -9,7 +9,18 @@ export default {
   ],
   theme: {
   	extend: {
+  		fontFamily: {
+  			display: ['var(--font-fredoka)', 'sans-serif'],
+  			body: ['var(--font-inter)', 'sans-serif'],
+  			data: ['var(--font-plex-mono)', 'monospace'],
+  		},
   		colors: {
+  			ink: '#16181D',
+  			paper: '#EDF2F7',
+  			coral: '#FF4D6D',
+  			teal: '#00B8A9',
+  			amber: '#FFC93C',
+  			violet: '#6C63FF',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -55,7 +66,32 @@ export default {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+  		boxShadow: {
+  			hard: '6px 6px 0 0 #16181D',
+  			'hard-sm': '4px 4px 0 0 #16181D',
+  			'hard-lg': '10px 10px 0 0 #16181D',
+  		},
+  		keyframes: {
+  			'bounce-in': {
+  				'0%': { transform: 'scale(0.3) rotate(-15deg)', opacity: '0' },
+  				'60%': { transform: 'scale(1.08) rotate(4deg)', opacity: '1' },
+  				'100%': { transform: 'scale(1) rotate(0deg)' },
+  			},
+  			hop: {
+  				'0%, 100%': { transform: 'translateY(0)' },
+  				'50%': { transform: 'translateY(-14px)' },
+  			},
+  			wobble: {
+  				'0%, 100%': { transform: 'rotate(-2deg)' },
+  				'50%': { transform: 'rotate(2deg)' },
+  			},
+  		},
+  		animation: {
+  			'bounce-in': 'bounce-in 0.7s cubic-bezier(.34,1.56,.64,1) both',
+  			hop: 'hop 1.8s ease-in-out infinite',
+  			wobble: 'wobble 2.6s ease-in-out infinite',
+  		},
   	}
   },
   plugins: [require("tailwindcss-animate")],

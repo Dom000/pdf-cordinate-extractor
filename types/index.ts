@@ -39,3 +39,28 @@ export type DT = {
 
 
 export type DTData = DT["data"];
+
+export type OriginMode = "top-left" | "bottom-left";
+
+// Points/rects are stored in canonical bottom-left-origin PDF points
+// regardless of the display OriginMode, so exports stay meaningful
+// (matches the (x, y, width, height) convention pdf-lib itself uses).
+export type SavedPoint = {
+  id: string;
+  kind: "point";
+  page: number;
+  x: number;
+  y: number;
+};
+
+export type SavedRect = {
+  id: string;
+  kind: "rect";
+  page: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type SavedEntry = SavedPoint | SavedRect;

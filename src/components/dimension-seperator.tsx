@@ -20,19 +20,22 @@ function DimensionSeperator({
   return (
     <div
       className={cn(
-        " text-gray-600 w-full flex flex-col justify-center items-center",
+        "flex w-full flex-col items-center justify-center font-data text-ink/60",
         className
       )}
     >
       {orientation == "vertical" && (
-        <div className=" flex flex-col space-y-4 items-center justify-center  -rotate-90">
-          <p>{topText}</p> <p>{bottomText}</p>
+        <div className="flex -rotate-90 flex-col items-center justify-center space-y-4">
+          <p className="font-display font-semibold text-coral">{topText}</p>{" "}
+          <p>{bottomText}</p>
         </div>
       )}
-      {orientation !== "vertical" && <p>{topText}</p>}{" "}
+      {orientation !== "vertical" && (
+        <p className="font-display font-semibold text-coral">{topText}</p>
+      )}{" "}
       <Separator
         className={cn(
-          "my-2 ",
+          "my-2 bg-ink/20",
           seperatorClassName,
           orientation === "vertical" ? "-rotate-90" : ""
         )}

@@ -3,35 +3,35 @@ import { Github, Twitter, Heart } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="w-full py-4  bg-gray-100">
-      <div className="container mx-auto px-4 flex justify-center items-center space-x-4">
+    <footer className="w-full border-t-4 border-ink bg-white py-5">
+      <div className="container mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 text-sm">
         <Link
           href="https://github.com/dom000"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-gray-600 hover:text-gray-900 flex items-center space-x-2"
+          className="flex items-center gap-2 font-medium text-ink/70 hover:text-ink"
         >
-          <Github size={20} />
+          <Github size={18} />
           <span>GitHub</span>
         </Link>
-        <span className="text-gray-400">|</span>
+        <span className="text-ink/20">|</span>
         <Link
           href="https://x/dom000_dev"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-gray-600 hover:text-gray-900 flex items-center space-x-2"
+          className="flex items-center gap-2 font-medium text-ink/70 hover:text-ink"
         >
-          <Twitter size={20} />
+          <Twitter size={18} />
           <span>X (Twitter)</span>
         </Link>
-        <span className="text-gray-400">|</span>
+        <span className="text-ink/20">|</span>
         <Link
           href="https://buymeacoffee.com/dom000"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-gray-600 hover:text-gray-900 flex items-center space-x-2"
+          className="flex items-center gap-2 font-medium text-ink/70 hover:text-ink"
         >
-          <Heart size={20} className="text-red-500" />
+          <Heart size={18} className="text-coral" />
           <span>Support</span>
         </Link>
       </div>
