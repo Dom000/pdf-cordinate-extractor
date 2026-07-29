@@ -4,8 +4,7 @@ import "react-pdf/dist/esm/Page/TextLayer.css";
 import { useState, useEffect, type MouseEvent, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import CoordinateDisplay from "./CoordinateDisplay";
-import domtoimage from "dom-to-image-more";
-import { DocumentCallback } from "react-pdf/src/shared/types.js";
+import { DocumentCallback, PageCallback } from "react-pdf/src/shared/types.js";
 import { getPdfDimentions } from "@/lib/utils";
 import { Separator } from "./ui/separator";
 import DimensionSeperator from "./dimension-seperator";
@@ -29,8 +28,13 @@ export default function PDFViewer({ file }: PDFViewerProps) {
   const [pdfdata, setPdfData] = useState<DTData>();
   const [pdfYinfo, setPdfYinfo] = useState("");
   const [pdfXinfo, setPdfXinfo] = useState("");
-  const [pdfHeight, setpdfHeight] = useState(0);
-  const scaleY = -4;
+  // Actual rendered size of the PDF page canvas, in CSS pixels. Used (not the
+  // physical point/mm size) for anything involving screen coordinates, since
+  // the two are different unit systems.
+  const [pageSize, setPageSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
 
   const [previewUrl, setpreviewUrl] = useState("");
   const [coordinates, setCoordinates] = useState<{
@@ -55,38 +59,48 @@ export default function PDFViewer({ file }: PDFViewerProps) {
   }, []);
 
   const onDocumentLoadSuccess = async (document: DocumentCallback) => {
-    const { numPages, getPage } = document;
-    setNumPages(numPages);
-    convertPdfToImage();
-    const { data, height } = await getPdfDimentions(file);
+    setNumPages(document.numPages);
+    const { data } = await getPdfDimentions(file);
     setPdfData(data);
     setPdfXinfo(`${data.centimeters.x} cm`);
     setPdfYinfo(`${data.centimeters.y} cm`);
-    setpdfHeight(Math.round(height));
+  };
+
+  // Captures the page's rendered pixel size and a fresh snapshot of the
+  // canvas for the magnifier as soon as rendering finishes (and again on
+  // every page change), so the magnifier is always in sync with what's on
+  // screen instead of a one-off snapshot taken on a fixed delay.
+  const onPageRenderSuccess = (page: PageCallback) => {
+    setPageSize({ width: page.width, height: page.height });
+    const canvas = document.querySelector<HTMLCanvasElement>(
+      "#pdf-container-node canvas"
+    );
+    if (canvas) {
+      setpreviewUrl(canvas.toDataURL());
+    }
   };
 
   const handleMouseMove = (event: MouseEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    const y = event.clientY + scaleY; // add the height of the element
 
     setCoordinates({
       x: event.clientX - rect.left,
-      y: y - rect.top,
+      y: event.clientY - rect.top,
     });
   };
+
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Get the container’s bounding rectangle
     const rect = e.currentTarget.getBoundingClientRect();
 
-    const yAxis = e.clientY + scaleY; // add the height of the element
-
     const x = e.clientX - rect.left;
-    const y = yAxis - rect.top;
+    const y = e.clientY - rect.top;
 
-    // Optionally update state so that CoordinateDisplay shows the clicked coordinates
-    setCoordinates({ x, y: y });
+    setCoordinates({ x, y });
 
-    const coordsText = `X: ${Math.round(x)}, Y: ${Math.round(pdfHeight - y)}`;
+    // PDFs use a bottom-left origin, so flip the y-axis using the actual
+    // rendered page height.
+    const flippedY = (pageSize?.height ?? 0) - y;
+    const coordsText = `X: ${Math.round(x)}, Y: ${Math.round(flippedY)}`;
 
     navigator.clipboard
       .writeText(coordsText)
@@ -96,21 +110,6 @@ export default function PDFViewer({ file }: PDFViewerProps) {
       .catch((err) => {
         console.error("Failed to copy!", err);
       });
-  };
-
-  // buggy 🐞🐞 , i don't have time to work on it , basically to idea behind this function
-  // is to convert the pdf to an image and then display it in the magnifier so a user can see a zoomed in version of the pdf and get accurate coordinates
-
-  const convertPdfToImage = () => {
-    setTimeout(() => {
-      domtoimage
-        .toJpeg(document.getElementById("pdf-container-node"), {
-          quality: 1,
-        })
-        .then(function (dataUrl: string) {
-          setpreviewUrl(dataUrl);
-        });
-    }, 3000);
   };
 
   const handleChangeUnit = (e: string) => {
@@ -185,10 +184,14 @@ export default function PDFViewer({ file }: PDFViewerProps) {
                   onMouseLeave={() => setCoordinates(null)}
                   className="relative caret-transparent  inline-block"
                 >
-                  <Page pageNumber={pageNumber} />
-                  {coordinates && (
+                  <Page
+                    pageNumber={pageNumber}
+                    onRenderSuccess={onPageRenderSuccess}
+                  />
+                  {coordinates && pageSize && (
                     <CoordinateDisplay
-                      pdfHeight={pdfHeight}
+                      pageWidth={pageSize.width}
+                      pageHeight={pageSize.height}
                       previewUrl={previewUrl}
                       coordinates={coordinates}
                     />

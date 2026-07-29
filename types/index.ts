@@ -10,6 +10,7 @@ export enum DocumentType {
   A8 = "A8",
   A9 = "A9",
   A10 = "A10",
+  Custom = "Custom",
 }
 
 export type DT = {
